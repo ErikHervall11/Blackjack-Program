@@ -295,7 +295,7 @@ def main():
             deck = build_deck(num_decks)
             full_shoe_size = len(deck)
             time.sleep(1)
-            print(f" Shoe reshuffled! Back to {len(deck)} cards.\n")
+            print(f"Shoe reshuffled! Back to {len(deck)} cards.\n")
 
         if not can_start_round(deck, num_players):
             time.sleep(1)

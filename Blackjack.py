@@ -4,6 +4,7 @@ import time
 CARD_TYPES = [2,3,4,5,6,7,8,9,10,'J','Q','K','A']
 DEFAULT_DECKS = 6
 DEFAULT_PLAYERS = 5
+RESHUFFLE_PERCENT = 0.75  # reshuffle after 75% of the shoe is used
 
 def user_welcome(): # welcome message
     print("Welcome to the blackjack simulator!")
@@ -273,6 +274,7 @@ def main():
     
     # Build and show the deck
     deck = build_deck(num_decks)
+    full_shoe_size = len(deck) # store full shoe size for reshuffle
     time.sleep(1)
     print(f"Game setup: {num_players} players, you are in position {user_pos}.")
     time.sleep(1)
@@ -281,6 +283,20 @@ def main():
     
     # Initialize game
     while True:
+
+         # Check if shoe needs reshuffling
+        used_ratio = 1 - (len(deck) / full_shoe_size)
+        if used_ratio >= RESHUFFLE_PERCENT:
+            time.sleep(1)
+            print("\n🔄 The dealer is reshuffling the shoe...")
+            for _ in range(3):
+                print("...shuffling...")
+                time.sleep(0.8)
+            deck = build_deck(num_decks)
+            full_shoe_size = len(deck)
+            time.sleep(1)
+            print(f" Shoe reshuffled! Back to {len(deck)} cards.\n")
+
         if not can_start_round(deck, num_players):
             time.sleep(1)
             print("Not enough cards left in the shoe to start another round.")

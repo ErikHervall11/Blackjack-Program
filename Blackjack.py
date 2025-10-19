@@ -1,4 +1,5 @@
 import random
+import time
 
 CARD_TYPES = [2,3,4,5,6,7,8,9,10,'J','Q','K','A']
 DEFAULT_DECKS = 6
@@ -6,114 +7,123 @@ DEFAULT_PLAYERS = 5
 
 def user_welcome(): # welcome message
     print("Welcome to the blackjack simulator!")
+    print() # blank line for readability 
 
 def get_num_decks(): # get number of decks
-    print("How many decks do you want to use today? (min: 1; default: 6; max: 8) ")
-    user_input = input()
-    
     while True:
+        # no need to print, you can add the string inside the input function. 
+        # also, need the input inside the loop to re-prompt user if the number is less than 1 or greater than 8
+        # if the valueerror is hit, it passes/continues, and will keep looping until a return is hit with the default set or user input val set
+        user_input = input("How many decks do you want to use today? (min: 1; default: 6; max: 8) ")
         if user_input == "":
             return DEFAULT_DECKS
-
         try:
-            if (1 <= int(user_input) <= 8):
-                return int(user_input)
-            else:
-                print("Please enter a valid number (between 1 and 8, inclusive) or press Enter for default of 6")
-                user_input = input()
-        except ValueError:
-            print("Please enter a valid number (between 1 and 8, inclusive) or press Enter for default of 6")
-            user_input = input()
+            val = int(user_input) #cleaner to convert to int once
+            if (1 <= val <= 8):
+                return val
+        except ValueError: 
+            pass
+        print("Please enter a valid number 1–8 or press Enter for default.")
 
 def build_deck(num_decks = 6): # deck building function
     deck = []
     for _ in range(num_decks):
-        for _ in range(4):
+        for _ in range(4): # 4 suits
             deck.extend(CARD_TYPES)
     random.shuffle(deck)
     return deck
 
-def print_deck(deck): # deck printing function
-    for i in range(0, len(deck), 13):
-        print(deck[i:i+13])
+def print_deck_structure(num_decks): # prints the deck structure, mostly for testing and visualizing the deck(s) and making sure they were all built correctly
+    suits = ["♠️ Spades", "♥️ Hearts", "♦️ Diamonds", "♣️ Clubs"]
+    for d in range(1, num_decks + 1):
+        print(f"\n===== DECK {d} =====")
+        for s in suits:
+            print(f"{s}: {CARD_TYPES}")
 
 def get_num_players(): # get number of players
-    print("How many players are playing with you today, not counting the dealer? (min: 1; default: 5; max: 12)")
-    user_input = input()
-
+    # same as above, input inside loop to re-prompt user if invalid input
     while True:
+        user_input = input("How many players are playing with you today, not counting the dealer? (min: 1; default: 5; max: 12)")
         if user_input == "":
             return DEFAULT_PLAYERS
-
         try:
-            if (1 <= int(user_input) <= 12):
-                return int(user_input)
-            else:
-                print("Please enter a valid number (between 1 and 12, inclusive) or press Enter for default of 5")
-                user_input = input()
+            val = int(user_input)
+            if 1 <= val <= 12:
+                return val
         except ValueError:
-            print("Please enter a valid number (between 1 and 12, inclusive) or press Enter for default of 5")
-            user_input = input()
+            pass
+        print("Please enter a valid number 1–12 or press Enter for default 5.")
 
 def get_player_position(max_players): # gets player position
-    print("Where are you sitting at the table? Type 1 for the first seat (gets cards first), 2 for the next seat, etc.")
-    user_input = input()
-    
     while True:
+        user_input = input(f"Your seat (1–{max_players}): ").strip()
         try:
-            if (1 <= int(user_input) <= max_players):
-                return int(user_input)
-            else:
-                print(f"Please enter a valid number (between 1 and {max_players}).")
-                user_input = input()
+            val = int(user_input)
+            if 1 <= val <= max_players:
+                return val
         except ValueError:
-            print(f"Please enter a valid number (between 1 and {max_players}).")
-            user_input = input()
+            pass
+        print(f"Please enter a valid number 1–{max_players}.")
 
-def initialize_players(num_players_val): # create empty lists for each player
-    player_hands = []
-    for i in range(num_players_val):
-        player_hands.append([])
-    return player_hands
+def initialize_players(num_players_val): #creates empty hands for each player
+    return [[] for _ in range(num_players_val)]
 
-def deal_card(deck, player_hands, player_index): # deal card function; no check if deck has cards because there will be a future penetration function
+#only need deck and target hand as parameters and we can remove player index and just used the deck name directly
+def deal_card(deck, target_hand): # deal card function; no check if deck has cards because there will be a future penetration function
+    if not deck: #check that there is a deck to draw from / will be replaced with penetration logic later
+        raise RuntimeError("Shoe is empty (no penetration/reshuffle logic yet).")
     card = deck.pop()
-    player_hands[player_index].append(card)
+    target_hand.append(card)
     return card
 
+
 def initial_deal(deck, player_hands, dealer_hand):
-    num_players_val = len(player_hands)
-
-    for i in range(num_players_val):
-        card = deal_card(deck, player_hands, i)
+    # one up-card to each player
+    for i, hand in enumerate(player_hands):
+        card = deal_card(deck, hand)
+        time.sleep(1)
         print(f"Player {i+1} gets: {card}")
 
-    dealer_card = deck.pop()
-    dealer_hand.append(dealer_card)
-    print(f"Dealer shows: {dealer_card}")
+    # dealer up-card
+    deal_card(deck, dealer_hand)
+    time.sleep(1)
+    print(f"Dealer shows: {dealer_hand[0]}")
 
-    for i in range(num_players_val):
-        card = deal_card(deck, player_hands, i)
+    # second card to each player
+    for i, hand in enumerate(player_hands):
+        card = deal_card(deck, hand)
+        time.sleep(1)
         print(f"Player {i+1} gets: {card}")
 
-    hole_card = deck.pop()
-    dealer_hand.append(hole_card)
+    # dealer hole card
+    deal_card(deck, dealer_hand)
+    time.sleep(1)
     print("Dealer gets hole card (face down)")
 
 def display_hands(player_hands, dealer_hand, user_position, show_hole_card=False): #Display all player hands and dealer hand
     print("\n--- Current Hands ---")
-    
+    time.sleep(1)
+    # loop through all player hands
     for i, hand in enumerate(player_hands):
         marker = " (YOU)" if i == user_position - 1 else ""
-        player_value = hand_value(hand)
-        print(f"Player {i+1}{marker}: {hand} (Value: {player_value})")
-    
-    if show_hole_card:
-        dealer_value = hand_value(dealer_hand)
-        print(f"Dealer: {dealer_hand} (Value: {dealer_value})")
+        # Print player number, the hand (list of cards), and the current total value
+        time.sleep(1)
+        print(f"Player {i+1}{marker}: {hand} (Value: {hand_value(hand)})")
+
+    if not dealer_hand: # harmless check if dealer hand is empty
+        time.sleep(1)
+        print("Dealer: [] (Showing: 0)")
+
+     # If show_hole_card=True, reveal both dealer cards and show total value
+    elif show_hole_card:
+        time.sleep(1)
+        print(f"Dealer: {dealer_hand} (Value: {hand_value(dealer_hand)})")
+        
     else:
-        dealer_visible_value = hand_value([dealer_hand[0]])
-        print(f"Dealer: [{dealer_hand[0]}, ???] (Showing: {dealer_visible_value})")
+        # else hide the dealer's second hole card and only show the first
+        # value of just the up-card
+        time.sleep(1)
+        print(f"Dealer: [{dealer_hand[0]}, ???] (Showing: {hand_value([dealer_hand[0]])})")
     print()
 
 def hand_value(hand): #calculates the value of the hand; not linked through main
@@ -135,11 +145,115 @@ def hand_value(hand): #calculates the value of the hand; not linked through main
 
     return total
 
-def action(): # defines action (hit, stand, etc.)
-    print("Your turn to play")
-    print("1 to Hit")
-    print("2 to stand")
-    return input()
+#changing to prompt action with hit or stand options
+def prompt_action():
+    while True:
+        choice = input("Your action: (H)it or (S)tand? ").strip().lower()
+        if choice in ('h','s'):
+            return choice
+        time.sleep(1)
+        print("Please enter 'h' or 's'.")
+
+
+#added the below function to return action
+def is_blackjack(hand): #returns boolean if hand is a blackjack
+    return len(hand) == 2 and hand_value(hand) == 21
+
+def is_bust(hand): #returns boolean if hand is bust
+    return hand_value(hand) > 21
+
+# player turn function with is_user parameter to differentiate between user and bot players
+def player_turn(deck, hand, is_user=True):
+    # If opening blackjack, no action.
+    if is_blackjack(hand):
+        return
+    while True:
+        if is_user: # user prompt for action
+            time.sleep(1)
+            print(f"Your hand: {hand} (Value: {hand_value(hand)})")
+            act = prompt_action()
+        else:
+            # simple bot: stand always (can be made smarter later)
+            act = 's'
+        if act == 'h': # hit
+            card = deal_card(deck, hand)
+            if is_user:
+                time.sleep(1)
+                print(f"You draw: {card} (Value: {hand_value(hand)})")
+            if is_bust(hand): # check for bust
+                if is_user:
+                    time.sleep(1)
+                    print("You bust!")
+                break
+        else:
+            if is_user: # stand
+                time.sleep(1)
+                print("You stand.")
+            break
+
+def dealer_turn(deck, dealer_hand, hit_soft_17=True): # dealer turn function with soft 17 rule
+    time.sleep(1)
+    print("\nDealer reveals hole card...")
+    time.sleep(1)
+    print(f"Dealer has: {dealer_hand} (Value: {hand_value(dealer_hand)})")
+    while True:
+        value = hand_value(dealer_hand)
+        # detect soft 17: value==17 and hand contains an Ace counted as 11
+        # quick check: if any Ace and (value - 10) is between 7 and 11 inclusive
+        soft17 = (value == 17) and any(c == 'A' for c in dealer_hand) and (hand_value([c if c != 'A' else 1 for c in dealer_hand]) == 7)
+        must_hit = value < 17 or (hit_soft_17 and soft17)
+        if must_hit:
+            card = deal_card(deck, dealer_hand)
+            time.sleep(1)
+            print(f"Dealer draws: {card} (Value: {hand_value(dealer_hand)})")
+            if is_bust(dealer_hand):
+                time.sleep(1)
+                print("Dealer busts!")
+                break
+        else:
+            time.sleep(1)
+            print("Dealer stands.")
+            break
+
+def resolve_round(player_hands, dealer_hand): # resolve round function to determine outcomes 
+    dealer_total = hand_value(dealer_hand)
+    dealer_bj = is_blackjack(dealer_hand)
+    time.sleep(1)
+    print("\n--- Results ---")
+    for i, hand in enumerate(player_hands): # loop through each player hand to determine outcome
+        player_total = hand_value(hand)
+        player_bj = is_blackjack(hand)
+        if player_bj and dealer_bj:
+            outcome = "Push (both blackjack)."
+        elif player_bj:
+            outcome = "Win (blackjack)."
+        elif is_bust(hand):
+            outcome = "Lose (bust)."
+        elif is_bust(dealer_hand):
+            outcome = "Win (dealer bust)."
+        elif dealer_bj:
+            outcome = "Lose (dealer blackjack)."
+        elif player_total > dealer_total:
+            outcome = "Win."
+        elif player_total < dealer_total:
+            outcome = "Lose."
+        else:
+            outcome = "Push."
+        time.sleep(1)
+        print(f"Player {i+1}: {hand} (Value: {player_total}) -> {outcome}")
+
+def yes_no(prompt): # simple yes/no function
+    while True:
+        time.sleep(1)
+        a = input(f"{prompt} (y/n): ").strip().lower()
+        if a in ('y', 'n'):
+            return a == 'y' # return True for 'y', False for 'n' to check at the bottom if user wants another round
+        print("Please enter 'y' or 'n'.")
+
+def can_start_round(deck, num_players): # check if enough cards to start a new round
+    # 2 per player + 2 for dealer to *start* a round
+    return len(deck) >= (2 * num_players + 2)
+
 
 # def hit():
 #     for i in range(num_players_val):
@@ -152,30 +266,56 @@ def main():
     
     # Get game setup
     num_decks = get_num_decks()
-    num_players_val = get_num_players()
-    user_pos = get_player_position(num_players_val)
+    num_players = get_num_players() # changed to just numplayers. litte cleaner, implies a num value already
+    user_pos = get_player_position(num_players)
 
     # Create player order
     
     # Build and show the deck
     deck = build_deck(num_decks)
-    print_deck(deck)
+    time.sleep(1)
+    print(f"Game setup: {num_players} players, you are in position {user_pos}.")
+    time.sleep(1)
+    print(f"Shoe prepared with {len(deck)} cards across {num_decks} deck(s).\n")
+    print_deck_structure(num_decks)  # For testing purposes; can be removed in production
     
     # Initialize game
-    player_hands = initialize_players(num_players_val)
-    dealer_hand = []
-    
-    print(f"\nGame setup: {num_players_val} players, you are in position {user_pos}")
-    print("\nDealing initial cards...")
-    
-    # Deal initial cards
-    initial_deal(deck, player_hands, dealer_hand)
-    
-    # Show current state
-    display_hands(player_hands, dealer_hand, user_pos)
+    while True:
+        if not can_start_round(deck, num_players):
+            time.sleep(1)
+            print("Not enough cards left in the shoe to start another round.")
+            time.sleep(1)
+            print(f"Cards remaining: {len(deck)}. Stopping here.")
+            break
 
-    # Player's turn to play
-    print(action())
+        player_hands = initialize_players(num_players) # create empty hands for each player
+        dealer_hand = []
+
+        time.sleep(1)
+        print("Dealing new round...")
+        time.sleep(1)
+        print("---------- New Round ----------")
+        initial_deal(deck, player_hands, dealer_hand)
+        display_hands(player_hands, dealer_hand, user_pos, show_hole_card=False)
+
+        for i, hand in enumerate(player_hands):
+            is_user = (i == user_pos - 1)
+            if is_user:
+                time.sleep(1)
+                print("\n--- Your Turn ---")
+            else:
+                time.sleep(1)
+                print(f"\n--- Player {i+1} Turn --- (auto-stand in Phase 1)")
+            player_turn(deck, hand, is_user=is_user)
+
+        dealer_turn(deck, dealer_hand, hit_soft_17=True)
+        display_hands(player_hands, dealer_hand, user_pos, show_hole_card=True)
+        resolve_round(player_hands, dealer_hand)
+
+        if not yes_no("\nDeal another round with the remaining shoe?"):
+            time.sleep(1)
+            print("Thanks for playing!")
+            break
 
 if __name__ == "__main__":
     main()

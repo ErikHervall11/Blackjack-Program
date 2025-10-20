@@ -163,6 +163,14 @@ def is_blackjack(hand): #returns boolean if hand is a blackjack
 def is_bust(hand): #returns boolean if hand is bust
     return hand_value(hand) > 21
 
+def all_players_bust(player_hands): #returns boolean if all players have bust
+    for hand in player_hands:
+        if not is_bust(hand):
+            return False
+    print("All players bust. Dealer wins.")
+    return True
+
+
 # player turn function with is_user parameter to differentiate between user and bot players
 def player_turn(deck, hand, is_user=True):
     # If opening blackjack, no action.
@@ -324,7 +332,9 @@ def main():
                 print(f"\n--- Player {i+1} Turn --- (auto-stand in Phase 1)")
             player_turn(deck, hand, is_user=is_user)
 
-        dealer_turn(deck, dealer_hand, hit_soft_17=True)
+        if not all_players_bust(player_hands):
+            dealer_turn(deck, dealer_hand, hit_soft_17=True)
+
         display_hands(player_hands, dealer_hand, user_pos, show_hole_card=True)
         resolve_round(player_hands, dealer_hand)
 
